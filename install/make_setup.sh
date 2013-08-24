@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Default install directory
-INSTALL_DIR=/cvmfs/oasis.opensciencegrid.org/org/palms
+INSTALL_DIR=/cvmfs/oasis.opensciencegrid.org/osg/palms
 
 function help_msg {
   cat << EOF
@@ -41,7 +41,7 @@ done
 
 
 if [ "$INSTALL_DIR" == "OASIS" ]; then
-  INSTALL_DIR=/cvmfs/oasis.opensciencegrid.org/org/palms
+  INSTALL_DIR=/cvmfs/oasis.opensciencegrid.org/osg/palms
 fi
 
 if [ -z $OPT_PALMS_DIR ]; then
@@ -83,8 +83,6 @@ if [ -z $RELATIVE_LINK ]; then
   cat > "$COPY_DIR/setup.sh" << EOF
 # Shell setup for PALMS
 PATH="$PATH:$PALMS_DIR/bin"
-SCRIPTPATH=\$( cd "\$(dirname "\$0")" ; pwd -P )
-if [ -d \$SCRIPTPATH/bin ]; then 
 export PATH
 # palmsdosetup () {  eval \`$PALMS_DIR/bin/palms setup "\$@"\`; }
 load () { eval "\$("\$@")"; }
@@ -93,7 +91,8 @@ EOF
 else
   cat > "$COPY_DIR/setup.sh" << EOF
 # Shell setup for PALMS - relocatable version
-SCRIPTPATH=\$( cd "\$(dirname "\$0")" ; pwd -P )
+# This file is sourced, so \$BASH_SOURCE is used instead of \$0
+SCRIPTPATH=\$( cd "\$(dirname "\$BASH_SOURCE")" ; pwd -P )
 if [ -d \$SCRIPTPATH/bin ]; then 
   PATH="$PATH:\$SCRIPTPATH/bin"
 else
