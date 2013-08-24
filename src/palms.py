@@ -320,6 +320,7 @@ class Palms (object):
     rel_repo_root_dir = None
     rel_bck_root_dir = None
     rel_share_root_dir = None
+    shell = None
     #install_root_dir = None
     #repo_root_dir = None
     bck_root_dir = None
@@ -343,6 +344,16 @@ class Palms (object):
                 os.mkdir(self.get_share_root_dir())
             if not os.path.exists(self.get_bck_root_dir()):
                 os.mkdir(self.get_bck_root_dir())
+
+    def set_shell(self, shell_type):
+        if shell_type in ['csh', 'tcsh', 'cshe']:
+            shell_type = 'csh'
+        else:
+            shell_type = 'sh'
+        self.shell = shell_type
+
+    def get_shell(self):
+        return self.shell
 
     def get_install_root_dir(self):
         return os.path.abspath(os.path.join(self.root_dir, self.rel_install_root_dir))
@@ -832,7 +843,7 @@ if __name__ == "__main__" :
     try:
         # Using gnu_getopt instead of getopt to parse options after the arguments
         #  e.g. palms setup -r /tmp myapp
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "fdhvr:u:", ["force", "default", "help", "url=", "root-dir="])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "fdhvr:u:", ["force", "default", "help", "url=", "root-dir=", "shell="])
         #except getopt.GetoptError as err:
     except getopt.GetoptError:
         # print help information and exit:
@@ -845,6 +856,7 @@ if __name__ == "__main__" :
     command = None
     root_dir = None #'.'
     package_url = None
+    user_shell = None
     for o, a in opts:
         if o == "-v":
             verbose = True
@@ -859,6 +871,8 @@ if __name__ == "__main__" :
             root_dir = a
         elif o in ("-u", "--url"):
             package_url = a
+        elif o in ("--shell"):
+            user_shell = a
         else:
             assert False, "unhandled option"
 
@@ -885,6 +899,9 @@ if __name__ == "__main__" :
     except OSError:
         print 'ERROR:_Palms root dir does not exist: %s' % tmp_dir
         sys.exit(1)
+
+    if user_shell:
+        p.set_shell(user_shell)
 
 
     # commands = ['setup', 'install', 'remove', 'update', 'check', 'version', 'list']
@@ -930,11 +947,11 @@ if __name__ == "__main__" :
             retv = p.archive(pa)
         elif command == 'setup':
             if pa.name == 'FAKE':
-                print 'source "%s/test.sh"' % p.root_dir
+                print 'source "%s/test.%s"' % (p.root_dir, p.get_shell())
                 sys.exit(0)
             retv = p.get_setup(pa)
             if p.is_installed(pa):
-                print 'source "%s/setup.sh"' % retv
+                print 'source "%s/setup.%s"' % (retv, p.get_shell())
             else:
                 if verbose:
                     print "%s is not installed. File not found: %s" % (pa.name, retv)
