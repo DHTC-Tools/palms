@@ -312,6 +312,9 @@ class Palms (object):
     DEFAULT_ROOT_DIR = "/cvmfs/oasis.opensciencegrid.org/osg/palms"
     DEFALUT_VERSION = DEFAULT #'default'
     UP_INSTALL_DIR = os.path.join('..','..','..','..') #'../../../..' # make_install_pathname
+    EXCLUDED_DIR = ['ARCH', 'DIST', 'PLATFORM']
+    EXCLUDED_PREFIX = ['JUMP']
+    EXCLUDED_SUFFIX = ['jump']
     root_dir = None
     rel_install_root_dir = None
     rel_repo_root_dir = None
@@ -594,19 +597,32 @@ class Palms (object):
         rets = os.path.join(self.get_install_root_dir(), name, '$OSG_SYSTEM', '$OSG_ARCH', version)
         return rets
 
+    def _is_ok_dirname(self, name):
+        if name:
+            if name in self.EXCLUDED_DIR:
+                return False
+            for i in self.EXCLUDED_PREFIX:
+                if name.startswith(i):
+                    return False
+            for i in self.EXCLUDED_SUFFIX:
+                if name.endswith(i):
+                    return False
+            return True
+        return False
+
     def list(self, name=None, system=None, architecture=None, version=None, return_default=False, short=True):
         res = {}
         res_def = {}
         if name:
             name_list = [name]
         else:
-            name_list = os.listdir(self.get_install_root_dir())
+            name_list = filter(self._is_ok_dirname, os.listdir(self.get_install_root_dir()))
         for i in name_list:
             res[i] = {}
             if system:
                 sys_list = [system]
             else:
-                sys_list = os.listdir(os.path.join(self.get_install_root_dir(), i))
+                sys_list = filter(self._is_ok_dirname, os.listdir(os.path.join(self.get_install_root_dir(), i)))
                 if short:
                     sys_list = [nl for nl in sys_list
                                 if not os.path.islink(os.path.join(self.get_install_root_dir(), i, nl))]
@@ -615,7 +631,7 @@ class Palms (object):
                 if architecture:
                     arch_list = [architecture]
                 else:
-                    arch_list = os.listdir(os.path.join(self.get_install_root_dir(), i, j))
+                    arch_list = filter(self._is_ok_dirname, os.listdir(os.path.join(self.get_install_root_dir(), i, j)))
                     if short:
                         arch_list = [nl for nl in arch_list
                                      if not os.path.islink(os.path.join(self.get_install_root_dir(), i, j, nl))]
@@ -638,7 +654,31 @@ class Palms (object):
             return res, res_def
         return res
 
+
+
     def print_list(list_dic, list_default=None):
+        rets = []
+        mytable = [('SOFTWARE', 'SYSTEM', 'ARCH', 'VERSION')]
+        for i in list_dic.keys():
+            for j in list_dic[i].keys():
+                for k, k_val in list_dic[i][j].items():
+                    for l in k_val:
+                        if list_default:
+                            if l==list_default["%s-%s-%s" % (i, j, k)]:
+                                mytable.append((i, j, k, "%s (default)" % l))
+                                continue
+                        mytable.append((i, j, k, l))
+        col_width = [max(len(x) for x in col) for col in zip(*mytable)]
+        for line in mytable:
+            # print " ".join("{:{}}".format(x, col_width[i]) for i, x in enumerate(line))
+            print "  ".join(x.ljust(col_width[i]) for i, x in enumerate(line))
+        #print "| " + " | ".join("{:{}}".format(x, col_width[i])
+        #                        for i, x in enumerate(line)) + " |"
+
+        print '\n'.join(rets)
+    print_list = staticmethod(print_list)
+
+    def print_list_old(list_dic, list_default=None):
         rets = []
         for i in list_dic.keys():
             for j in list_dic[i].keys():
@@ -654,7 +694,6 @@ class Palms (object):
                                 continue
                         rets.append("%s \t%s \t%s \t%s" % (i, j, k, l))
         print '\n'.join(rets)
-    print_list = staticmethod(print_list)
 
 
 
