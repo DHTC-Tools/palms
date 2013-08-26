@@ -86,7 +86,7 @@ PATH="$PATH:$PALMS_DIR/bin"
 export PATH
 # palmsdosetup () {  eval \`$PALMS_DIR/bin/palms setup "\$@"\`; }
 load () { eval "\$("\$@")"; }
-palmsdosetup () { x="\$(palms setup "\$@")" && eval "\$x" || echo "PALMS setup failed: \$x"; }
+palmsdosetup () { x="\$(palms setup --shell=sh "\$@")" && eval "\$x" || echo "PALMS setup failed: \$x"; }
 EOF
 else
   cat > "$COPY_DIR/setup.sh" << EOF
@@ -101,7 +101,7 @@ fi
 export PATH
 # palmsdosetup () {  eval \`$PALMS_DIR/bin/palms setup "\$@"\`; }
 load () { eval "\$("\$@")"; }
-palmsdosetup () { x="\$(palms setup "\$@")" && eval "\$x" || echo "PALMS setup failed: \$x"; }
+palmsdosetup () { x="\$(palms setup --shell=sh "\$@")" && eval "\$x" || echo "PALMS setup failed: \$x"; }
 EOF
 fi
 
@@ -110,7 +110,7 @@ fi
 cat > "$COPY_DIR/setup.csh" << EOF
 setenv PATH "$PATH:$PALMS_DIR/bin"
 #alias palmsdosetup 'eval \`'$PALMS_DIR/bin/palms' setup \\!*\`'
-alias palmsdosetup 'x=\`'$PALMS_DIR/bin/palms' setup \\!*\` && eval "\$x" || echo "PALMS setup failed: \$x"' 
+alias palmsdosetup 'x=\`'$PALMS_DIR/bin/palms' setup --shell=csh \\!*\` && eval "\$x" || echo "PALMS setup failed: \$x"' 
 EOF
 
 # setup (shell independent)
