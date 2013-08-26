@@ -49,6 +49,22 @@ import os
 import platform
 import optparse
 
+EVALUATED_COMMANDS = ['setup']
+
+def palmslog (message, level=None, command=None):
+    """Logging messages keepinf into account evaluated commands
+    """
+    #TODO: add loglevel handling
+    if level:
+        msg = "PALMS - %s: %s" % (level, message)
+    else:
+        msg = message
+    if command and command in EVALUATED_COMMANDS:
+        print 'echo "%s"' % msg
+    else:
+        print msg
+
+
 class FindVersion (object):
     UNKNOWN="UNKNOWN"
     UNSUPPORTED="UNSUPPORTED"
@@ -310,8 +326,8 @@ class PlatformMgr (object):
 
 class Palms (object):
     DEFAULT_ROOT_DIR = "/cvmfs/oasis.opensciencegrid.org/osg/palms"
-    DEFALUT_VERSION = DEFAULT #'default'
-    UP_INSTALL_DIR = os.path.join('..','..','..','..') #'../../../..' # make_install_pathname
+    DEFAULT_VERSION = DEFAULT  # 'default'
+    UP_INSTALL_DIR = os.path.join('..', '..', '..', '..')  # '../../../..' # make_install_pathname
     EXCLUDED_DIR = ['ARCH', 'DIST', 'PLATFORM']
     EXCLUDED_PREFIX = ['JUMP']
     EXCLUDED_SUFFIX = ['jump']
@@ -367,60 +383,60 @@ class Palms (object):
     def get_bck_root_dir(self):
         return os.path.abspath(os.path.join(self.root_dir, self.rel_bck_root_dir))
 
-    def make_dir_old(self, name, platform, version, default=False):
-        # should it check if the whole path exists? or assume it does not?
-        this_root = os.path.join(self.root_dir, name)
-        new_dir = False
-        if not os.path.isdir(this_root):
-            new_dir = True
-            os.mkdir(this_root)
-        this_dir = os.path.join(this_root, platform)
-        if new_dir or not os.path.isdir(this_dir):
-            new_dir = True
-            os.mkdir(this_dir)
-            default = True
-        this_root = this_dir
-        this_dir = os.path.join(this_root, version)
-        if not new_dir and os.path.isdir(this_dir):
-            return None
-        os.mkdir(this_dir)
-        if default:
-            # make a link (relative path)
-            os.symlink(version, os.path.join(this_root, Palms.DEFAULT_VERSION))
-        return this_dir
-
-    def make_dir(root_dir, rel_path, default=False, default_name=DEFAULT):
-        # TODO: fix?
-        version = ""
-        # should it check if the whole path exists? or assume it does not?
-        if not os.path.isdir(root_dir):
-            # Fail, no rood dir
-            pass
-        this_dir = root_dir
-        new_dir = False
-        for path_element in os.path.split(rel_path):
-            this_root = this_dir
-            this_dir = os.path.join(this_root, path_element)
-            if not os.path.isdir(this_dir):
-                new_dir = True
-                os.mkdir(this_dir)
-        if new_dir or default:
-            os.symlink(path_element, os.path.join(this_root, default_name))
-            if not os.path.isdir(this_dir):
-                pass
-            new_dir = True
-            os.mkdir(this_dir)
-            default = True
-        this_root = this_dir
-        this_dir = os.path.join(this_root, version)
-        if not new_dir and os.path.isdir(this_dir):
-            return None
-        os.mkdir(this_dir)
-        if default:
-            # make a link (relative path)
-            os.symlink(version, os.path.join(this_root, Palms.DEFAULT_VERSION))
-        return this_dir
-    make_dir = staticmethod(make_dir)
+    # def make_dir_old(self, name, platform, version, default=False):
+    #     # should it check if the whole path exists? or assume it does not?
+    #     this_root = os.path.join(self.root_dir, name)
+    #     new_dir = False
+    #     if not os.path.isdir(this_root):
+    #         new_dir = True
+    #         os.mkdir(this_root)
+    #     this_dir = os.path.join(this_root, platform)
+    #     if new_dir or not os.path.isdir(this_dir):
+    #         new_dir = True
+    #         os.mkdir(this_dir)
+    #         default = True
+    #     this_root = this_dir
+    #     this_dir = os.path.join(this_root, version)
+    #     if not new_dir and os.path.isdir(this_dir):
+    #         return None
+    #     os.mkdir(this_dir)
+    #     if default:
+    #         # make a link (relative path)
+    #         os.symlink(version, os.path.join(this_root, Palms.DEFAULT_VERSION))
+    #     return this_dir
+    #
+    # def make_dir(root_dir, rel_path, default=False, default_name=DEFAULT):
+    #     # TODO: fix?
+    #     version = ""
+    #     # should it check if the whole path exists? or assume it does not?
+    #     if not os.path.isdir(root_dir):
+    #         # Fail, no rood dir
+    #         pass
+    #     this_dir = root_dir
+    #     new_dir = False
+    #     for path_element in os.path.split(rel_path):
+    #         this_root = this_dir
+    #         this_dir = os.path.join(this_root, path_element)
+    #         if not os.path.isdir(this_dir):
+    #             new_dir = True
+    #             os.mkdir(this_dir)
+    #     if new_dir or default:
+    #         os.symlink(path_element, os.path.join(this_root, default_name))
+    #         if not os.path.isdir(this_dir):
+    #             pass
+    #         new_dir = True
+    #         os.mkdir(this_dir)
+    #         default = True
+    #     this_root = this_dir
+    #     this_dir = os.path.join(this_root, version)
+    #     if not new_dir and os.path.isdir(this_dir):
+    #         return None
+    #     os.mkdir(this_dir)
+    #     if default:
+    #         # make a link (relative path)
+    #         os.symlink(version, os.path.join(this_root, Palms.DEFAULT_VERSION))
+    #     return this_dir
+    # make_dir = staticmethod(make_dir)
 
     def is_not_specified(path):
         if not path or path == NOT_SPECIFIED:
@@ -435,7 +451,8 @@ class Palms (object):
     is_any = staticmethod(is_any)
 
     def remove_install_link(self, package, repo_rel_dir, default_name=DEFAULT):
-        cur_path = os.path.join(self.get_install_root_dir(), package.name, package.system, package.architecture, package.version)
+        cur_path = os.path.join(self.get_install_root_dir(), package.name, package.system,
+                                package.architecture, package.version)
 
 
     def make_install_link(self, package, repo_rel_dir, is_default=False, default_name=DEFAULT):
@@ -467,7 +484,7 @@ class Palms (object):
             os.mkdir(arch_path)
             if Palms.is_any(arch):
                 for i in mgr.list_architectures(system):
-                    os.symlink(arch, os.path.join(sys_path,i))
+                    os.symlink(arch, os.path.join(sys_path, i))
         version = package.version
         if not version:
             version = NOT_SPECIFIED
@@ -479,7 +496,7 @@ class Palms (object):
             os.symlink(os.path.join(Palms.UP_INSTALL_DIR, repo_rel_dir), ver_path)
             #os.mkdir(ver_path)
         # if it is requested as default or the architecture was created or is the only one
-        if is_default or len(os.listdir(arch_path))==1:
+        if is_default or len(os.listdir(arch_path)) == 1:
             default_path = os.path.join(arch_path, default_name)
             if os.path.exists(default_path):
                 os.remove(default_path)
@@ -571,6 +588,11 @@ class Palms (object):
 
 
     def is_installed(self, package):
+        """
+        Verify if a package is installed
+        :param package: package to check
+        :return: True if package is installed, False otherwise
+        """
         instdir = os.path.join(self.get_install_root_dir(), package.make_setup_pathname())
         if os.path.exists(instdir):
             return True
@@ -585,6 +607,15 @@ class Palms (object):
         # same name +
         #  either system NOT_DEFINED or same system +
         #   either architecture NOT_DEFINED
+        """
+        Check if package is conflicting with already installed packages
+        Definition of conflicting. Packages are conflicting if:
+        they have the same name AND
+          they have same system or either system is NOT_DEFINED  AND
+          either architecture NOT_DEFINED
+        :param package: package being verified
+        :return: True if conflicting, False otherwise
+        """
         tmp_dir = os.path.join(self.get_repo_root_dir(), package.name)
         if not os.path.exists(tmp_dir):
             return False
@@ -599,14 +630,10 @@ class Palms (object):
 
 
     def get_setup(self, package):
-        # return self.get_setup_int(package.name, package.system, package.architecture, package.version)
+        """Return the path where setup files should to be
+        :param package: package of which the setup path is returned
+        """
         return os.path.join(self.get_install_root_dir(), package.make_setup_pathname())
-
-    def get_setup_int(self, name=None, system=None, architecture=None, version=None):
-        if not version:
-            version = DEFAULT
-        rets = os.path.join(self.get_install_root_dir(), name, '$OSG_SYSTEM', '$OSG_ARCH', version)
-        return rets
 
     def _is_ok_dirname(self, name):
         if name:
@@ -622,6 +649,14 @@ class Palms (object):
         return False
 
     def list(self, name=None, system=None, architecture=None, version=None, return_default=False, short=True):
+        """List the installed software.
+        :param name: used to filter the items to list
+        :param system: used to filter the items to list
+        :param architecture: used to filter the items to list
+        :param version: used to filter the items to list
+        :param return_default: print which are the default versions
+        :param short: print a more compact output
+        """
         res = {}
         res_def = {}
         if name:
@@ -668,6 +703,11 @@ class Palms (object):
 
 
     def print_list(list_dic, list_default=None):
+        """
+        Pretty print the table for the software list
+        :param list_dic: installed software
+        :param list_default: list with default version of the software
+        """
         rets = []
         mytable = [('SOFTWARE', 'SYSTEM', 'ARCH', 'VERSION')]
         for i in list_dic.keys():
@@ -690,6 +730,7 @@ class Palms (object):
     print_list = staticmethod(print_list)
 
     def print_list_old(list_dic, list_default=None):
+        # old version - delete?
         rets = []
         for i in list_dic.keys():
             for j in list_dic[i].keys():
@@ -699,7 +740,7 @@ class Palms (object):
                         #    rets.append("%s \t%s \t%s \t%s (%s)" %
                         #                (i, j, k, l, list_default["%s-%s-%s" % (i, j, k)]))
                         if list_default:
-                            if l==list_default["%s-%s-%s" % (i, j, k)]:
+                            if l == list_default["%s-%s-%s" % (i, j, k)]:
                                 rets.append("%s \t%s \t%s \t%s (default)" %
                                             (i, j, k, l))
                                 continue
@@ -711,6 +752,7 @@ class Palms (object):
 
     def remove(self, package):
         # Removes the installed package and the link tree
+        #TODO: implement the remove action
         pass
 
     def update(self, package, archive=True):
@@ -726,6 +768,7 @@ class Palms (object):
         pass
 
     def archive(self, package):
+        #TODO: implement the archive action
         pass
 
 
@@ -838,12 +881,13 @@ def is_write_command(command):
     return True
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     import getopt
     try:
         # Using gnu_getopt instead of getopt to parse options after the arguments
         #  e.g. palms setup -r /tmp myapp
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "fdhvr:u:", ["force", "default", "help", "url=", "root-dir=", "shell="])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "fdhvr:u:",
+                                       ["force", "default", "help", "url=", "root-dir=", "shell="])
         #except getopt.GetoptError as err:
     except getopt.GetoptError:
         # print help information and exit:
@@ -854,7 +898,7 @@ if __name__ == "__main__" :
     default = False
     verbose = False
     command = None
-    root_dir = None #'.'
+    root_dir = None  # was '.'
     package_url = None
     user_shell = None
     for o, a in opts:
@@ -897,7 +941,7 @@ if __name__ == "__main__" :
     try:
         p = Palms(tmp_dir, is_write_command(command))
     except OSError:
-        print 'ERROR:_Palms root dir does not exist: %s' % tmp_dir
+        palmslog('Palms root dir does not exist: %s' % tmp_dir, 'ERROR')
         sys.exit(1)
 
     if user_shell:
@@ -920,13 +964,13 @@ if __name__ == "__main__" :
         # elif command ==
     else:
         if not len(args)>1:
-            print "Invalid syntax: %s requires arguments" % command
+            palmslog("Invalid syntax: %s requires arguments" % command, 'ERROR', command)
             usage()
             sys.exit(2)
         pa = Package(*args[1:])
         if command == 'install':
             if not package_url:
-                print "Package URL is missing"
+                palmslog("Package URL is missing", 'ERROR')
                 usage()
                 sys.exit(2)
             pa.set_tarball_file(package_url)
@@ -951,14 +995,14 @@ if __name__ == "__main__" :
                 sys.exit(0)
             retv = p.get_setup(pa)
             if p.is_installed(pa):
+                if not p.get_shell():
+                    palmslog("Unable to determine shell type. Try invoking palms manually using --shell",
+                             'ERROR', command)
                 print 'source "%s/setup.%s"' % (retv, p.get_shell())
             else:
                 if verbose:
-                    print "%s is not installed. File not found: %s" % (pa.name, retv)
+                    palmslog("%s is not installed. File not found: %s" % (pa.name, retv), 'ERROR', command)
                 sys.exit(1)
         else:
             print "Unimplemented command"
             sys.exit(1)
-
-
-
