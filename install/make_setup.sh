@@ -11,7 +11,7 @@ $0 [ options ]
  -d DIR   set an install directory (for the setup scripts)
        This is the path that will be seen by the users
        OASIS is a keyword for "/cvmfs/oasis.opensciencegrid.org/org/palms"
- -p DIR   set the directory where palms binaries installed (as ssen by the users)
+ -p DIR   set the directory where palms binaries installed (as seen by the users)
           [./palms/ from the install dir]
  -a DIR   set setup links directory [=install directory]
        You need to set this if to copy the files you must use a different path 
